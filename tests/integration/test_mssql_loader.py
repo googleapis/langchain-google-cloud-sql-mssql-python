@@ -33,7 +33,12 @@ db_password = os.environ["DB_PASSWORD"]
 @pytest.fixture(name="engine")
 def setup() -> Generator:
     engine = MSSQLEngine.from_instance(
-        project_id=project_id, region=region, instance=instance_id, database=db_name, db_user=db_user, db_password=db_password
+        project_id=project_id,
+        region=region,
+        instance=instance_id,
+        database=db_name,
+        db_user=db_user,
+        db_password=db_password,
     )
     yield engine
 

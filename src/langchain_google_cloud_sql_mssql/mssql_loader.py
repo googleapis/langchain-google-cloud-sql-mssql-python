@@ -13,7 +13,7 @@
 # limitations under the License.
 import json
 from collections.abc import Iterable
-from typing import Any, Dict, List, Optional, Sequence, cast
+from typing import Any, List, Optional, Sequence
 
 import sqlalchemy
 from langchain_community.document_loaders.base import BaseLoader

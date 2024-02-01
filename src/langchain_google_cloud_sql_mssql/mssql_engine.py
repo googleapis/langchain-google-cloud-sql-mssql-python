@@ -15,54 +15,10 @@
 # TODO: Remove below import when minimum supported Python version is 3.10
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, Optional
+from typing import Optional
 
-import google.auth
-import google.auth.transport.requests
-import requests
 import sqlalchemy
 from google.cloud.sql.connector import Connector
-
-if TYPE_CHECKING:
-    import google.auth.credentials
-
-
-def _get_iam_principal_email(
-    credentials: google.auth.credentials.Credentials,
-) -> str:
-    """Get email address associated with current authenticated IAM principal.
-
-    Email will be used for automatic IAM database authentication to Cloud SQL.
-
-    Args:
-        credentials (google.auth.credentials.Credentials):
-            The credentials object to use in finding the associated IAM
-            principal email address.
-
-    Returns:
-        email (str):
-            The email address associated with the current authenticated IAM
-            principal.
-    """
-    # refresh credentials if they are not valid
-    if not credentials.valid:
-        request = google.auth.transport.requests.Request()
-        credentials.refresh(request)
-    # if credentials are associated with a service account email, return early
-    if hasattr(credentials, "_service_account_email"):
-        return credentials._service_account_email
-    # call OAuth2 api to get IAM principal email associated with OAuth2 token
-    url = f"https://oauth2.googleapis.com/tokeninfo?access_token={credentials.token}"
-    response = requests.get(url)
-    response.raise_for_status()
-    response_json: Dict = response.json()
-    email = response_json.get("email")
-    if email is None:
-        raise ValueError(
-            "Failed to automatically obtain authenticated IAM princpal's "
-            "email address using environment's ADC credentials!"
-        )
-    return email
 
 
 class MSSQLEngine:
@@ -90,10 +46,10 @@ class MSSQLEngine:
         details.
 
         This method uses the Cloud SQL Python Connector to connect to Cloud SQL
-        using automatic IAM database authentication with the Google ADC
-        credentials sourced from the environment.
+        MSSQL instance using the given database credentials.
 
-        More details can be found at https://github.com/GoogleCloudPlatform/cloud-sql-python-connector#credentials
+        More details can be found at
+        https://github.com/GoogleCloudPlatform/cloud-sql-python-connector#credentials
 
         Args:
             project_id (str): Project ID of the Google Cloud Project where
@@ -102,6 +58,8 @@ class MSSQLEngine:
             instance (str): The name of the Cloud SQL instance.
             database (str): The name of the database to connect to on the
                 Cloud SQL instance.
+            db_user (str): The username to use for authentication.
+            db_password (str): The password to use for authentication.
 
         Returns:
             (MSSQLEngine): The engine configured to connect to a
@@ -121,25 +79,18 @@ class MSSQLEngine:
     ) -> sqlalchemy.engine.Engine:
         """Create a SQLAlchemy engine using the Cloud SQL Python Connector.
 
-        Defaults to use "pytds" driver and to connect using automatic IAM
-        database authentication with the IAM principal associated with the
-        environment's Google Application Default Credentials.
-
         Args:
             instance_connection_name (str): The instance connection
                 name of the Cloud SQL instance to establish a connection to.
                 (ex. "project-id:instance-region:instance-name")
             database (str): The name of the database to connect to on the
                 Cloud SQL instance.
+            user (str): The username to use for authentication.
+            password (str): The password to use for authentication.
         Returns:
             (sqlalchemy.engine.Engine): Engine configured using the Cloud SQL
                 Python Connector.
         """
-        # get application default credentials
-        credentials, _ = google.auth.default(
-            scopes=["https://www.googleapis.com/auth/userinfo.email"]
-        )
-        iam_database_user = _get_iam_principal_email(credentials)
         if cls._connector is None:
             cls._connector = Connector()
 
