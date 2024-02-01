@@ -19,7 +19,7 @@ import sqlalchemy
 from langchain_community.document_loaders.base import BaseLoader
 from langchain_core.documents import Document
 
-from langchain_google_cloud_sql_mssql.mysql_engine import MySQLEngine
+from langchain_google_cloud_sql_mssql.mssql_engine import MSSQLEngine
 
 DEFAULT_METADATA_COL = "langchain_metadata"
 
@@ -51,20 +51,20 @@ def _parse_doc_from_table(
     return docs
 
 
-class MySQLLoader(BaseLoader):
-    """A class for loading langchain documents from a Cloud SQL MySQL database."""
+class MSSQLLoader(BaseLoader):
+    """A class for loading langchain documents from a Cloud SQL MSSQL database."""
 
     def __init__(
         self,
-        engine: MySQLEngine,
+        engine: MSSQLEngine,
         query: str,
         content_columns: Optional[List[str]] = None,
         metadata_columns: Optional[List[str]] = None,
     ):
         """
         Args:
-          engine (MySQLEngine): MySQLEngine object to connect to the MySQL database.
-          query (str): The query to execute in MySQL format.
+          engine (MSSQLEngine): MSSQLEngine object to connect to the MSSQL database.
+          query (str): The query to execute in MSSQL format.
           content_columns (List[str]): The columns to write into the `page_content`
              of the document. Optional.
           metadata_columns (List[str]): The columns to write into the `metadata` of the document.
@@ -77,7 +77,7 @@ class MySQLLoader(BaseLoader):
 
     def load(self) -> List[Document]:
         """
-        Load langchain documents from a Cloud SQL MySQL database.
+        Load langchain documents from a Cloud SQL MSSQL database.
 
         Document page content defaults to the first columns present in the query or table and
         metadata defaults to all other columns. Use with content_columns to overwrite the column

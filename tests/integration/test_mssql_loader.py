@@ -19,7 +19,7 @@ import pytest
 import sqlalchemy
 from langchain_core.documents import Document
 
-from langchain_google_cloud_sql_mssql import MySQLEngine, MySQLLoader
+from langchain_google_cloud_sql_mssql import MSSQLEngine, MSSQLLoader
 
 project_id = os.environ["PROJECT_ID"]
 region = os.environ["REGION"]
@@ -32,7 +32,7 @@ db_password = os.environ["DB_PASSWORD"]
 
 @pytest.fixture(name="engine")
 def setup() -> Generator:
-    engine = MySQLEngine.from_instance(
+    engine = MSSQLEngine.from_instance(
         project_id=project_id, region=region, instance=instance_id, database=db_name, db_user=db_user, db_password=db_password
     )
     yield engine
@@ -83,7 +83,7 @@ def test_load_from_query_default(default_setup):
         )
         conn.commit()
     query = f'SELECT * FROM "{table_name}";'
-    loader = MySQLLoader(
+    loader = MSSQLLoader(
         engine=default_setup,
         query=query,
     )
@@ -118,7 +118,7 @@ def test_load_from_query_customized_content_customized_metadata(default_setup):
         )
         conn.commit()
     query = f'SELECT * FROM "{table_name}";'
-    loader = MySQLLoader(
+    loader = MSSQLLoader(
         engine=default_setup,
         query=query,
         content_columns=[
@@ -162,7 +162,7 @@ def test_load_from_query_customized_content_default_metadata(default_setup):
         )
         conn.commit()
     query = f'SELECT * FROM "{table_name}";'
-    loader = MySQLLoader(
+    loader = MSSQLLoader(
         engine=default_setup,
         query=query,
         content_columns=[
@@ -199,7 +199,7 @@ def test_load_from_query_default_content_customized_metadata(default_setup):
         conn.commit()
 
     query = f'SELECT * FROM "{table_name}";'
-    loader = MySQLLoader(
+    loader = MSSQLLoader(
         engine=default_setup,
         query=query,
         metadata_columns=[
@@ -251,7 +251,7 @@ def test_load_from_query_with_langchain_metadata(engine):
         )
         conn.commit()
     query = f'SELECT * FROM "{table_name}";'
-    loader = MySQLLoader(
+    loader = MSSQLLoader(
         engine=engine,
         query=query,
         metadata_columns=[

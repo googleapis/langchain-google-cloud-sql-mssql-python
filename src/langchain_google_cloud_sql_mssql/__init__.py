@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from langchain_google_cloud_sql_mssql.mysql_engine import MySQLEngine
-from langchain_google_cloud_sql_mssql.mysql_loader import MySQLLoader
+from langchain_google_cloud_sql_mssql.mssql_engine import MSSQLEngine
+from langchain_google_cloud_sql_mssql.mssql_loader import MSSQLLoader
 
-__all__ = ["MySQLEngine", "MySQLLoader"]
+__all__ = ["MSSQLEngine", "MSSQLLoader"]

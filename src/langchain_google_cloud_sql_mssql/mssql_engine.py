@@ -65,8 +65,8 @@ def _get_iam_principal_email(
     return email
 
 
-class MySQLEngine:
-    """A class for managing connections to a Cloud SQL for MySQL database."""
+class MSSQLEngine:
+    """A class for managing connections to a Cloud SQL for MSSQL database."""
 
     _connector: Optional[Connector] = None
 
@@ -85,8 +85,8 @@ class MySQLEngine:
         database: str,
         db_user: str,
         db_password: str,
-    ) -> MySQLEngine:
-        """Create an instance of MySQLEngine from Cloud SQL instance
+    ) -> MSSQLEngine:
+        """Create an instance of MSSQLEngine from Cloud SQL instance
         details.
 
         This method uses the Cloud SQL Python Connector to connect to Cloud SQL
@@ -104,7 +104,7 @@ class MySQLEngine:
                 Cloud SQL instance.
 
         Returns:
-            (MySQLEngine): The engine configured to connect to a
+            (MSSQLEngine): The engine configured to connect to a
                 Cloud SQL instance database.
         """
         engine = cls._create_connector_engine(
@@ -121,7 +121,7 @@ class MySQLEngine:
     ) -> sqlalchemy.engine.Engine:
         """Create a SQLAlchemy engine using the Cloud SQL Python Connector.
 
-        Defaults to use "pymysql" driver and to connect using automatic IAM
+        Defaults to use "pytds" driver and to connect using automatic IAM
         database authentication with the IAM principal associated with the
         environment's Google Application Default Credentials.
 
