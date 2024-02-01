@@ -25,7 +25,6 @@ from google.cloud.sql.connector import Connector
 
 if TYPE_CHECKING:
     import google.auth.credentials
-    import pymysql
 
 
 def _get_iam_principal_email(
@@ -145,10 +144,10 @@ class MySQLEngine:
             cls._connector = Connector()
 
         # anonymous function to be used for SQLAlchemy 'creator' argument
-        def getconn() -> pymysql.Connection:
+        def getconn():
             conn = cls._connector.connect(  # type: ignore
                 instance_connection_name,
-                "pymysql",
+                "pytds",
                 user=user,
                 password=password,
                 db=database,
@@ -156,7 +155,7 @@ class MySQLEngine:
             return conn
 
         return sqlalchemy.create_engine(
-            "mysql+pymysql://",
+            "mssql+pytds://",
             creator=getconn,
         )
 
