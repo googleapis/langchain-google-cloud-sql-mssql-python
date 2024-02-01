@@ -84,6 +84,8 @@ class MySQLEngine:
         region: str,
         instance: str,
         database: str,
+        db_user: str,
+        db_password: str,
     ) -> MySQLEngine:
         """Create an instance of MySQLEngine from Cloud SQL instance
         details.
@@ -109,12 +111,14 @@ class MySQLEngine:
         engine = cls._create_connector_engine(
             instance_connection_name=f"{project_id}:{region}:{instance}",
             database=database,
+            user=db_user,
+            password=db_password,
         )
         return cls(engine=engine)
 
     @classmethod
     def _create_connector_engine(
-        cls, instance_connection_name: str, database: str
+        cls, instance_connection_name: str, database: str, user: str, password: str
     ) -> sqlalchemy.engine.Engine:
         """Create a SQLAlchemy engine using the Cloud SQL Python Connector.
 
@@ -145,9 +149,9 @@ class MySQLEngine:
             conn = cls._connector.connect(  # type: ignore
                 instance_connection_name,
                 "pymysql",
-                user=iam_database_user,
+                user=user,
+                password=password,
                 db=database,
-                enable_iam_auth=True,
             )
             return conn
 

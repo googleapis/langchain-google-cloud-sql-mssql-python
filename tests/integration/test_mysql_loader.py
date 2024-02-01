@@ -26,6 +26,8 @@ region = os.environ["REGION"]
 instance_id = os.environ["INSTANCE_ID"]
 table_name = os.environ["TABLE_NAME"]
 db_name = os.environ["DB_NAME"]
+db_user = os.environ["DB_USER"]
+db_password = os.environ["DB_PASSWORD"]
 
 
 @pytest.fixture(name="engine")
