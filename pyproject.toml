@@ -8,6 +8,7 @@ requires-python = ">=3.8"
 dependencies = [
     "langchain==0.1.1",
     "SQLAlchemy==2.0.7",
+    "sqlalchemy-pytds==0.3.5",
     "cloud-sql-python-connector[pytds]==1.5.0"
 ]
 
