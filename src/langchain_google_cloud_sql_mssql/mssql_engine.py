@@ -39,8 +39,8 @@ class MSSQLEngine:
         region: str,
         instance: str,
         database: str,
-        db_user: str,
-        db_password: str,
+        user: str,
+        password: str,
     ) -> MSSQLEngine:
         """Create an instance of MSSQLEngine from Cloud SQL instance
         details.
@@ -68,8 +68,8 @@ class MSSQLEngine:
         engine = cls._create_connector_engine(
             instance_connection_name=f"{project_id}:{region}:{instance}",
             database=database,
-            user=db_user,
-            password=db_password,
+            user=user,
+            password=password,
         )
         return cls(engine=engine)
 

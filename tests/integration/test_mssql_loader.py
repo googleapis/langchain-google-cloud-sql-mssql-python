@@ -37,8 +37,8 @@ def setup() -> Generator:
         region=region,
         instance=instance_id,
         database=db_name,
-        db_user=db_user,
-        db_password=db_password,
+        user=db_user,
+        password=db_password,
     )
     yield engine
 
