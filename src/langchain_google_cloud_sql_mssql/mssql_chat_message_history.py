@@ -60,9 +60,7 @@ class MSSQLChatMessageHistory(BaseChatMessageHistory):
                 sqlalchemy.text(query), {"session_id": self.session_id}
             ).fetchall()
         # load SQLAlchemy row objects into dicts
-        items = [
-            {"data": json.loads(result[0]), "type": result[1]} for result in results
-        ]
+        items = [{"data": json.loads(r[0]), "type": r[1]} for r in results]
         messages = messages_from_dict(items)
         return messages
 
