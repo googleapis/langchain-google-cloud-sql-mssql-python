@@ -91,7 +91,9 @@ def test_chat_message_history_table_does_not_exist(memory_engine: MSSQLEngine) -
         )
 
 
-def test_chat_message_history_table_malformed_schema(memory_engine: MSSQLEngine) -> None:
+def test_chat_message_history_table_malformed_schema(
+    memory_engine: MSSQLEngine,
+) -> None:
     """Test that MSSQLChatMessageHistory fails if schema is malformed."""
     with pytest.raises(IndexError):
         MSSQLChatMessageHistory(
