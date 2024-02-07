@@ -27,6 +27,7 @@ instance_id = os.environ["INSTANCE_ID"]
 db_name = os.environ["DB_NAME"]
 db_user = os.environ["DB_USER"]
 db_password = os.environ["DB_PASSWORD"]
+table_name = "message_store"
 
 
 @pytest.fixture(name="memory_engine")
@@ -40,16 +41,28 @@ def setup() -> Generator:
         password=db_password,
     )
 
+    # create table with malformed schema (missing 'type')
+    query = """CREATE TABLE malformed_table (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        session_id NVARCHAR(MAX) NOT NULL,
+        data NVARCHAR(MAX) NOT NULL,
+    );"""
+    with engine.connect() as conn:
+        conn.execute(sqlalchemy.text(query))
+        conn.commit()
     yield engine
     # use default table for MySQLChatMessageHistory
-    table_name = "message_store"
     with engine.connect() as conn:
         conn.execute(sqlalchemy.text(f"DROP TABLE IF EXISTS {table_name}"))
+        conn.execute(sqlalchemy.text(f"DROP TABLE IF EXISTS malformed_table"))
         conn.commit()
 
 
 def test_chat_message_history(memory_engine: MSSQLEngine) -> None:
-    history = MSSQLChatMessageHistory(engine=memory_engine, session_id="test")
+    memory_engine.create_chat_history_table(table_name)
+    history = MSSQLChatMessageHistory(
+        engine=memory_engine, session_id="test", table_name=table_name
+    )
     history.add_user_message("hi!")
     history.add_ai_message("whats up?")
     messages = history.messages
@@ -63,3 +76,24 @@ def test_chat_message_history(memory_engine: MSSQLEngine) -> None:
     # verify clear() clears message history
     history.clear()
     assert len(history.messages) == 0
+
+
+def test_chat_message_history_table_does_not_exist(memory_engine: MSSQLEngine) -> None:
+    """Test that MSSQLChatMessageHistory fails if table does not exist."""
+    with pytest.raises(AttributeError) as exc_info:
+        MSSQLChatMessageHistory(
+            engine=memory_engine, session_id="test", table_name="missing_table"
+        )
+        # assert custom error message for missing table
+        assert (
+            exc_info.value.args[0]
+            == f"Table 'missing_table' does not exist. Please create it before initializing MSSQLChatMessageHistory. See MSSQLEngine.create_chat_history_table() for a helper method."
+        )
+
+
+def test_chat_message_history_table_malformed_schema(memory_engine: MSSQLEngine) -> None:
+    """Test that MSSQLChatMessageHistory fails if schema is malformed."""
+    with pytest.raises(IndexError):
+        MSSQLChatMessageHistory(
+            engine=memory_engine, session_id="test", table_name="malformed_table"
+        )

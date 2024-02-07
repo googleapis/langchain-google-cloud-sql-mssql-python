@@ -22,34 +22,55 @@ from langchain_google_cloud_sql_mssql.mssql_engine import MSSQLEngine
 
 
 class MSSQLChatMessageHistory(BaseChatMessageHistory):
-    """Chat message history stored in a Cloud SQL MSSQL database."""
+    """Chat message history stored in a Cloud SQL MSSQL database.
+
+    Args:
+        engine (MSSQLEngine): SQLAlchemy connection pool engine for managing
+            connections to Cloud SQL for SQL Server.
+        session_id (str): Arbitrary key that is used to store the messages
+            of a single chat session.
+        table_name (str): The name of the table to use for storing/retrieving
+            the chat message history.
+    """
 
     def __init__(
         self,
         engine: MSSQLEngine,
         session_id: str,
-        table_name: str = "message_store",
+        table_name: str,
     ) -> None:
         self.engine = engine
         self.session_id = session_id
         self.table_name = table_name
-        self._create_table_if_not_exists()
+        self._verify_schema()
 
-    def _create_table_if_not_exists(self) -> None:
-        create_table_query = f"""IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES
-            WHERE TABLE_NAME = '{self.table_name}')
-        BEGIN
-        CREATE TABLE {self.table_name} (
-            id INT IDENTITY(1,1) PRIMARY KEY,
-            session_id NVARCHAR(MAX) NOT NULL,
-            data NVARCHAR(MAX) NOT NULL,
-            type NVARCHAR(MAX) NOT NULL
-        )
-        END;"""
-
-        with self.engine.connect() as conn:
-            conn.execute(sqlalchemy.text(create_table_query))
-            conn.commit()
+    def _verify_schema(self) -> None:
+        insp = sqlalchemy.inspect(self.engine.engine)
+        # check table exists
+        if insp.has_table(self.table_name):
+            # check that all required columns are present
+            required_columns = ["id", "session_id", "data", "type"]
+            column_names = [
+                c["name"] for c in insp.get_columns(table_name=self.table_name)
+            ]
+            if not (all(x in column_names for x in required_columns)):
+                raise IndexError(
+                    f"Table '{self.table_name}' has incorrect schema. Got "
+                    f"column names '{column_names}' but required column names "
+                    f"'{required_columns}'.\nPlease create table with following schema:"
+                    f"\nCREATE TABLE {self.table_name} ("
+                    "\n    id INT IDENTITY(1,1) PRIMARY KEY,"
+                    "\n    session_id NVARCHAR(MAX) NOT NULL,"
+                    "\n    data NVARCHAR(MAX) NOT NULL,"
+                    "\n    type NVARCHAR(MAX) NOT NULL"
+                    "\n);"
+                )
+        else:
+            raise AttributeError(
+                f"Table '{self.table_name}' does not exist. Please create "
+                "it before initializing MSSQLChatMessageHistory. See "
+                "MSSQLEngine.create_chat_history_table() for a helper method."
+            )
 
     @property
     def messages(self) -> List[BaseMessage]:  # type: ignore
