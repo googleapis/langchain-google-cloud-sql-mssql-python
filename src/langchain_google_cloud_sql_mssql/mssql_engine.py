@@ -118,3 +118,33 @@ class MSSQLEngine:
                 out from the connection pool.
         """
         return self.engine.connect()
+
+    def create_chat_history_table(self, table_name: str) -> None:
+        """Create table with schema required for MSSQLChatMessageHistory class.
+
+        Required schema is as follows:
+
+            CREATE TABLE {table_name} (
+                id INT IDENTITY(1,1) PRIMARY KEY,
+                session_id NVARCHAR(MAX) NOT NULL,
+                data NVARCHAR(MAX) NOT NULL,
+                type NVARCHAR(MAX) NOT NULL
+            )
+
+        Args:
+            table_name (str): Name of database table to create for storing chat
+                message history.
+        """
+        create_table_query = f"""IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES
+            WHERE TABLE_NAME = '{table_name}')
+        BEGIN
+        CREATE TABLE {table_name} (
+            id INT IDENTITY(1,1) PRIMARY KEY,
+            session_id NVARCHAR(MAX) NOT NULL,
+            data NVARCHAR(MAX) NOT NULL,
+            type NVARCHAR(MAX) NOT NULL
+        )
+        END;"""
+        with self.engine.connect() as conn:
+            conn.execute(sqlalchemy.text(create_table_query))
+            conn.commit()
