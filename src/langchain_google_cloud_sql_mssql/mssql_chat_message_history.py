@@ -47,14 +47,8 @@ class MSSQLChatMessageHistory(BaseChatMessageHistory):
     def _verify_schema(self) -> None:
         """Verify table exists with required schema for MSSQLChatMessageHistory class.
 
-        Required schema is as follows:
-
-            CREATE TABLE {table_name} (
-                id INT IDENTITY(1,1) PRIMARY KEY,
-                session_id NVARCHAR(MAX) NOT NULL,
-                data NVARCHAR(MAX) NOT NULL,
-                type NVARCHAR(MAX) NOT NULL
-            )
+        Use helper method MSSQLEngine.create_chat_history_table(...) to create
+        table with valid schema.
         """
         insp = sqlalchemy.inspect(self.engine.engine)
         # check table exists
