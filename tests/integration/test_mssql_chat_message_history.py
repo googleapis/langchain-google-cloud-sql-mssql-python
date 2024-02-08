@@ -51,7 +51,7 @@ def setup() -> Generator:
         conn.execute(sqlalchemy.text(query))
         conn.commit()
     yield engine
-    # use default table for MySQLChatMessageHistory
+    # cleanup tables
     with engine.connect() as conn:
         conn.execute(sqlalchemy.text(f"DROP TABLE IF EXISTS {table_name}"))
         conn.execute(sqlalchemy.text(f"DROP TABLE IF EXISTS malformed_table"))
