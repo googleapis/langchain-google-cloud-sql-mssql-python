@@ -15,10 +15,14 @@
 # TODO: Remove below import when minimum supported Python version is 3.10
 from __future__ import annotations
 
-from typing import Optional
+from typing import TYPE_CHECKING, Dict, List, Optional
 
 import sqlalchemy
 from google.cloud.sql.connector import Connector
+
+if TYPE_CHECKING:
+    import google.auth.credentials
+    import pytds
 
 
 class MSSQLEngine:

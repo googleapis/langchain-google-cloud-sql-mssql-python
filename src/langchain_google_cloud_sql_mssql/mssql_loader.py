@@ -15,7 +15,6 @@ import json
 from collections.abc import Iterable
 from typing import Any, Dict, Iterator, List, Optional, Sequence, cast
 
-import pytds
 import sqlalchemy
 from langchain_community.document_loaders.base import BaseLoader
 from langchain_core.documents import Document
