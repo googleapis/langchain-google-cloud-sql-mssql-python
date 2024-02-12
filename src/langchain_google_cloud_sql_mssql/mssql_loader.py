@@ -180,9 +180,8 @@ class MSSQLDocumentSaver:
         with self.engine.connect() as conn:
             for doc in docs:
                 row = _parse_row_from_doc(self._table.columns.keys(), doc)
-                for k, v in row.items():
-                    if type(v) == dict:
-                        row[k] = json.dumps(v)
+                if DEFAULT_METADATA_COL in row:
+                    row[DEFAULT_METADATA_COL] = json.dumps(row[DEFAULT_METADATA_COL])
                 conn.execute(sqlalchemy.insert(self._table).values(row))
             conn.commit()
 
@@ -197,9 +196,8 @@ class MSSQLDocumentSaver:
         with self.engine.connect() as conn:
             for doc in docs:
                 row = _parse_row_from_doc(self._table.columns.keys(), doc)
-                for k, v in row.items():
-                    if type(v) == dict:
-                        row[k] = json.dumps(v)
+                if DEFAULT_METADATA_COL in row:
+                    row[DEFAULT_METADATA_COL] = json.dumps(row[DEFAULT_METADATA_COL])
                 # delete by matching all fields of document
                 where_conditions = []
                 for col in self._table.columns:
