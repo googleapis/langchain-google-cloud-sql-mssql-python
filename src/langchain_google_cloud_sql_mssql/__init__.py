@@ -16,6 +16,14 @@ from langchain_google_cloud_sql_mssql.mssql_chat_message_history import (
     MSSQLChatMessageHistory,
 )
 from langchain_google_cloud_sql_mssql.mssql_engine import MSSQLEngine
-from langchain_google_cloud_sql_mssql.mssql_loader import MSSQLLoader
+from langchain_google_cloud_sql_mssql.mssql_loader import (
+    MSSQLDocumentSaver,
+    MSSQLLoader,
+)
 
-__all__ = ["MSSQLChatMessageHistory", "MSSQLEngine", "MSSQLLoader"]
+__all__ = [
+    "MSSQLChatMessageHistory",
+    "MSSQLEngine",
+    "MSSQLLoader",
+    "MSSQLDocumentSaver",
+]
