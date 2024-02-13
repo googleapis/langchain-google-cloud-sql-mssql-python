@@ -159,7 +159,7 @@ class MSSQLEngine:
         Create a table for saving of langchain documents.
 
         Args:
-            table_name (str): The MySQL database table name.
+            table_name (str): The MSSQL database table name.
             metadata_columns (List[sqlalchemy.Column]): A list of SQLAlchemy Columns
                 to create for custom metadata. Optional.
             store_metadata (bool): Whether to store extra metadata in a metadata column
@@ -189,10 +189,10 @@ class MSSQLEngine:
 
     def _load_document_table(self, table_name: str) -> sqlalchemy.Table:
         """
-        Load table schema from existing table in MySQL database.
+        Load table schema from existing table in MSSQL database.
 
         Args:
-            table_name (str): The MySQL database table name.
+            table_name (str): The MSSQL database table name.
 
         Returns:
             (sqlalchemy.Table): The loaded table.
