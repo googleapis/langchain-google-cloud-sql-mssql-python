@@ -13,7 +13,7 @@
 # limitations under the License.
 import json
 from collections.abc import Iterable
-from typing import Any, List, Optional, Sequence
+from typing import Any, Dict, Iterator, List, Optional, Sequence, cast
 
 import sqlalchemy
 from langchain_community.document_loaders.base import BaseLoader
@@ -21,34 +21,39 @@ from langchain_core.documents import Document
 
 from langchain_google_cloud_sql_mssql.mssql_engine import MSSQLEngine
 
+DEFAULT_CONTENT_COL = "page_content"
 DEFAULT_METADATA_COL = "langchain_metadata"
 
 
-def _parse_doc_from_table(
-    content_columns: Iterable[str],
-    metadata_columns: Iterable[str],
-    column_names: Iterable[str],
-    rows: Sequence[Any],
-) -> List[Document]:
-    docs = []
-    for row in rows:
-        page_content = " ".join(
-            str(getattr(row, column))
-            for column in content_columns
-            if column in column_names
-        )
-        metadata = {
-            column: getattr(row, column)
-            for column in metadata_columns
-            if column in column_names
-        }
-        if DEFAULT_METADATA_COL in metadata:
-            extra_metadata = json.loads(metadata[DEFAULT_METADATA_COL])
-            del metadata[DEFAULT_METADATA_COL]
-            metadata |= extra_metadata
-        doc = Document(page_content=page_content, metadata=metadata)
-        docs.append(doc)
-    return docs
+def _parse_doc_from_row(
+    content_columns: Iterable[str], metadata_columns: Iterable[str], row: Dict
+) -> Document:
+    page_content = " ".join(
+        str(row[column]) for column in content_columns if column in row
+    )
+    metadata: Dict[str, Any] = {}
+    # unnest metadata from langchain_metadata column
+    if DEFAULT_METADATA_COL in metadata_columns and row.get(DEFAULT_METADATA_COL):
+        for k, v in row[DEFAULT_METADATA_COL].items():
+            metadata[k] = v
+    # load metadata from other columns
+    for column in metadata_columns:
+        if column in row and column != DEFAULT_METADATA_COL:
+            metadata[column] = row[column]
+    return Document(page_content=page_content, metadata=metadata)
+
+
+def _parse_row_from_doc(column_names: Iterable[str], doc: Document) -> Dict:
+    doc_metadata = doc.metadata.copy()
+    row: Dict[str, Any] = {DEFAULT_CONTENT_COL: doc.page_content}
+    for entry in doc.metadata:
+        if entry in column_names:
+            row[entry] = doc_metadata[entry]
+            del doc_metadata[entry]
+    # store extra metadata in langchain_metadata column in json format
+    if DEFAULT_METADATA_COL in column_names and len(doc_metadata) > 0:
+        row[DEFAULT_METADATA_COL] = doc_metadata
+    return row
 
 
 class MSSQLLoader(BaseLoader):
@@ -57,29 +62,13 @@ class MSSQLLoader(BaseLoader):
     def __init__(
         self,
         engine: MSSQLEngine,
-        query: str,
+        table_name: str = "",
+        query: str = "",
         content_columns: Optional[List[str]] = None,
         metadata_columns: Optional[List[str]] = None,
     ):
         """
-        Args:
-          engine (MSSQLEngine): MSSQLEngine object to connect to the MSSQL database.
-          query (str): The query to execute in MSSQL format.
-          content_columns (List[str]): The columns to write into the `page_content`
-             of the document. Optional.
-          metadata_columns (List[str]): The columns to write into the `metadata` of the document.
-             Optional.
-        """
-        self.engine = engine
-        self.query = query
-        self.content_columns = content_columns
-        self.metadata_columns = metadata_columns
-
-    def load(self) -> List[Document]:
-        """
-        Load langchain documents from a Cloud SQL MSSQL database.
-
-        Document page content defaults to the first columns present in the query or table and
+        Document page content defaults to the first column present in the query or table and
         metadata defaults to all other columns. Use with content_columns to overwrite the column
         used for page content. Use metadata_columns to select specific metadata columns rather
         than using all remaining columns.
@@ -87,21 +76,135 @@ class MSSQLLoader(BaseLoader):
         If multiple content columns are specified, page_content’s string format will default to
         space-separated string concatenation.
 
+        Args:
+          engine (MSSQLEngine): MSSQLEngine object to connect to the MSSQL database.
+          table_name (str): The MSSQL database table name. (OneOf: table_name, query).
+          query (str): The query to execute in MSSQL format.  (OneOf: table_name, query).
+          content_columns (List[str]): The columns to write into the `page_content`
+             of the document. Optional.
+          metadata_columns (List[str]): The columns to write into the `metadata` of the document.
+             Optional.
+        """
+        self.engine = engine
+        self.table_name = table_name
+        self.query = query
+        self.content_columns = content_columns
+        self.metadata_columns = metadata_columns
+        if not self.table_name and not self.query:
+            raise ValueError("One of 'table_name' or 'query' must be specified.")
+        if self.table_name and self.query:
+            raise ValueError(
+                "Cannot specify both 'table_name' and 'query'. Specify 'table_name' to load "
+                "entire table or 'query' to load a specific query."
+            )
+
+    def load(self) -> List[Document]:
+        """
+        Load langchain documents from a Cloud SQL MSSQL database.
+
         Returns:
             (List[langchain_core.documents.Document]): a list of Documents with metadata from
                 specific columns.
         """
+        return list(self.lazy_load())
+
+    def lazy_load(self) -> Iterator[Document]:
+        """
+        Lazy Load langchain documents from a Cloud SQL MSSQL database. Use lazy load to avoid
+        caching all documents in memory at once.
+
+        Returns:
+            (Iterator[langchain_core.documents.Document]): a list of Documents with metadata from
+                specific columns.
+        """
+        if self.query:
+            stmt = sqlalchemy.text(self.query)
+        else:
+            stmt = sqlalchemy.text(f'select * from "{self.table_name}";')
         with self.engine.connect() as connection:
-            result_proxy = connection.execute(sqlalchemy.text(self.query))
+            result_proxy = connection.execute(stmt)
             column_names = list(result_proxy.keys())
-            results = result_proxy.fetchall()
             content_columns = self.content_columns or [column_names[0]]
             metadata_columns = self.metadata_columns or [
                 col for col in column_names if col not in content_columns
             ]
-            return _parse_doc_from_table(
-                content_columns,
-                metadata_columns,
-                column_names,
-                results,
+            while True:
+                row = result_proxy.fetchone()
+                if not row:
+                    break
+                # Handle default metadata field
+                row_data = {}
+                for column in column_names:
+                    value = getattr(row, column)
+                    if column == DEFAULT_METADATA_COL:
+                        row_data[column] = json.loads(value)
+                    else:
+                        row_data[column] = value
+                yield _parse_doc_from_row(content_columns, metadata_columns, row_data)
+
+
+class MSSQLDocumentSaver:
+    """A class for saving langchain documents into a Cloud SQL MSSQL database table."""
+
+    def __init__(
+        self,
+        engine: MSSQLEngine,
+        table_name: str,
+    ):
+        """
+        MSSQLDocumentSaver allows for saving of langchain documents in a database. If the table
+        doesn't exists, a table with default schema will be created. The default schema:
+            - page_content (type: text)
+            - langchain_metadata (type: JSON)
+
+        Args:
+          engine: MSSQLEngine object to connect to the MSSQL database.
+          table_name: The name of table for saving documents.
+        """
+        self.engine = engine
+        self.table_name = table_name
+        self._table = self.engine._load_document_table(table_name)
+        if DEFAULT_CONTENT_COL not in self._table.columns.keys():
+            raise ValueError(
+                f"Missing '{DEFAULT_CONTENT_COL}' field in table {table_name}."
             )
+
+    def add_documents(self, docs: List[Document]) -> None:
+        """
+        Save documents in the DocumentSaver table. Document’s metadata is added to columns if found or
+        stored in langchain_metadata JSON column.
+
+        Args:
+            docs (List[langchain_core.documents.Document]): a list of documents to be saved.
+        """
+        with self.engine.connect() as conn:
+            for doc in docs:
+                row = _parse_row_from_doc(self._table.columns.keys(), doc)
+                if DEFAULT_METADATA_COL in row:
+                    row[DEFAULT_METADATA_COL] = json.dumps(row[DEFAULT_METADATA_COL])
+                conn.execute(sqlalchemy.insert(self._table).values(row))
+            conn.commit()
+
+    def delete(self, docs: List[Document]) -> None:
+        """
+        Delete all instances of a document from the DocumentSaver table by matching the entire Document
+        object.
+
+        Args:
+            docs (List[langchain_core.documents.Document]): a list of documents to be deleted.
+        """
+        with self.engine.connect() as conn:
+            for doc in docs:
+                row = _parse_row_from_doc(self._table.columns.keys(), doc)
+                if DEFAULT_METADATA_COL in row:
+                    row[DEFAULT_METADATA_COL] = json.dumps(row[DEFAULT_METADATA_COL])
+                # delete by matching all fields of document
+                where_conditions = []
+                for col in self._table.columns:
+                    where_conditions.append(col == row[col.name])
+                conn.execute(
+                    sqlalchemy.delete(self._table).where(
+                        sqlalchemy.and_(*where_conditions)
+                    )
+                )
+            conn.commit()
