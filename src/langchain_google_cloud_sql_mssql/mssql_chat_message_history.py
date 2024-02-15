@@ -47,7 +47,7 @@ class MSSQLChatMessageHistory(BaseChatMessageHistory):
     def _verify_schema(self) -> None:
         """Verify table exists with required schema for MSSQLChatMessageHistory class.
 
-        Use helper method MSSQLEngine.create_chat_history_table(...) to create
+        Use helper method MSSQLEngine.init_chat_history_table(...) to create
         table with valid schema.
         """
         insp = sqlalchemy.inspect(self.engine.engine)
@@ -74,7 +74,7 @@ class MSSQLChatMessageHistory(BaseChatMessageHistory):
             raise AttributeError(
                 f"Table '{self.table_name}' does not exist. Please create "
                 "it before initializing MSSQLChatMessageHistory. See "
-                "MSSQLEngine.create_chat_history_table() for a helper method."
+                "MSSQLEngine.init_chat_history_table() for a helper method."
             )
 
     @property

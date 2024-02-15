@@ -59,7 +59,7 @@ def setup() -> Generator:
 
 
 def test_chat_message_history(memory_engine: MSSQLEngine) -> None:
-    memory_engine.create_chat_history_table(table_name)
+    memory_engine.init_chat_history_table(table_name)
     history = MSSQLChatMessageHistory(
         engine=memory_engine, session_id="test", table_name=table_name
     )
@@ -87,7 +87,7 @@ def test_chat_message_history_table_does_not_exist(memory_engine: MSSQLEngine) -
         # assert custom error message for missing table
         assert (
             exc_info.value.args[0]
-            == f"Table 'missing_table' does not exist. Please create it before initializing MSSQLChatMessageHistory. See MSSQLEngine.create_chat_history_table() for a helper method."
+            == f"Table 'missing_table' does not exist. Please create it before initializing MSSQLChatMessageHistory. See MSSQLEngine.init_chat_history_table() for a helper method."
         )
 
 
