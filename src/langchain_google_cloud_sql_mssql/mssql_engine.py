@@ -172,7 +172,7 @@ class MSSQLEngine:
         """
         if overwrite_existing:
             with self.engine.connect() as conn:
-                conn.execute(sqlalchemy.text(f"DROP TABLE IF EXISTS '{table_name}';"))
+                conn.execute(sqlalchemy.text(f'DROP TABLE IF EXISTS "{table_name}";'))
 
         columns = [
             sqlalchemy.Column(

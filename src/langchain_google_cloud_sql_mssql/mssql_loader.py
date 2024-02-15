@@ -36,7 +36,7 @@ def _parse_doc_from_row(
     )
     metadata: Dict[str, Any] = {}
     # unnest metadata from langchain_metadata column
-    if metadata_json_column in metadata_columns and row.get(metadata_json_column):
+    if row.get(metadata_json_column):
         for k, v in row[metadata_json_column].items():
             metadata[k] = v
     # load metadata from other columns
@@ -155,10 +155,8 @@ class MSSQLLoader(BaseLoader):
                     raise ValueError(
                         f"Column {name} not found in query result {column_names}."
                     )
-            # include metadata json column in the list of metadata columns
+            # use default metadata json column if not specified
             metadata_json_column = self.metadata_json_column or DEFAULT_METADATA_COL
-            if metadata_json_column not in metadata_columns:
-                metadata_columns.append(metadata_json_column)
 
             # load document one by one
             while True:
@@ -169,7 +167,7 @@ class MSSQLLoader(BaseLoader):
                 row_data = {}
                 for column in column_names:
                     value = getattr(row, column)
-                    if column == DEFAULT_METADATA_COL:
+                    if column == metadata_json_column:
                         row_data[column] = json.loads(value)
                     else:
                         row_data[column] = value

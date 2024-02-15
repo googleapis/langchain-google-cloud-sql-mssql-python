@@ -311,7 +311,7 @@ def test_save_doc_with_default_metadata(engine):
 
 
 @pytest.mark.parametrize("metadata_json_column", [None, "metadata_col_test"])
-def test_save_doc_with_customized_metadata(engine, store_metadata):
+def test_save_doc_with_customized_metadata(engine, metadata_json_column):
     content_column = "content_col_test"
     engine.init_document_table(
         table_name,
@@ -350,7 +350,6 @@ def test_save_doc_with_customized_metadata(engine, store_metadata):
         table_name=table_name,
         content_columns=[content_column],
         metadata_columns=[
-            "fruit_id",
             "fruit_name",
             "organic",
         ],
@@ -440,7 +439,7 @@ def test_delete_doc_with_default_metadata(engine):
 
 
 @pytest.mark.parametrize("metadata_json_column", [None, "metadata_col_test"])
-def test_delete_doc_with_customized_metadata(engine, store_metadata):
+def test_delete_doc_with_customized_metadata(engine, metadata_json_column):
     content_column = "content_col_test"
     engine.init_document_table(
         table_name,
