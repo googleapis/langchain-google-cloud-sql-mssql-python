@@ -119,7 +119,7 @@ class MSSQLEngine:
         """
         return self.engine.connect()
 
-    def create_chat_history_table(self, table_name: str) -> None:
+    def init_chat_history_table(self, table_name: str) -> None:
         """Create table with schema required for MSSQLChatMessageHistory class.
 
         Required schema is as follows:
