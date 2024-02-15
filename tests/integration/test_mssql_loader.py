@@ -266,7 +266,6 @@ def test_load_from_query_with_langchain_metadata(engine):
         query=query,
         metadata_columns=[
             "fruit_name",
-            "langchain_metadata",
         ],
     )
 
@@ -311,8 +310,9 @@ def test_save_doc_with_default_metadata(engine):
     ]
 
 
-@pytest.mark.parametrize("store_metadata", [True, False])
+@pytest.mark.parametrize("metadata_json_column", [None, "metadata_col_test"])
 def test_save_doc_with_customized_metadata(engine, store_metadata):
+    content_column = "content_col_test"
     engine.init_document_table(
         table_name,
         metadata_columns=[
@@ -329,7 +329,9 @@ def test_save_doc_with_customized_metadata(engine, store_metadata):
                 nullable=True,
             ),
         ],
-        store_metadata=store_metadata,
+        content_column=content_column,
+        metadata_json_column=metadata_json_column,
+        overwrite_existing=True,
     )
     test_docs = [
         Document(
@@ -337,27 +339,34 @@ def test_save_doc_with_customized_metadata(engine, store_metadata):
             metadata={"fruit_id": 1, "fruit_name": "Apple", "organic": 1},
         ),
     ]
-    saver = MSSQLDocumentSaver(engine=engine, table_name=table_name)
+    saver = MSSQLDocumentSaver(
+        engine=engine,
+        table_name=table_name,
+        content_column=content_column,
+        metadata_json_column=metadata_json_column,
+    )
     loader = MSSQLLoader(
         engine=engine,
         table_name=table_name,
+        content_columns=[content_column],
         metadata_columns=[
             "fruit_id",
             "fruit_name",
             "organic",
         ],
+        metadata_json_column=metadata_json_column,
     )
 
     saver.add_documents(test_docs)
     docs = loader.load()
 
-    if store_metadata:
+    if metadata_json_column:
         docs == test_docs
         assert engine._load_document_table(table_name).columns.keys() == [
-            "page_content",
+            content_column,
             "fruit_name",
             "organic",
-            "langchain_metadata",
+            metadata_json_column,
         ]
     else:
         assert docs == [
@@ -367,7 +376,7 @@ def test_save_doc_with_customized_metadata(engine, store_metadata):
             ),
         ]
         assert engine._load_document_table(table_name).columns.keys() == [
-            "page_content",
+            content_column,
             "fruit_name",
             "organic",
         ]
@@ -376,7 +385,7 @@ def test_save_doc_with_customized_metadata(engine, store_metadata):
 def test_save_doc_without_metadata(engine):
     engine.init_document_table(
         table_name,
-        store_metadata=False,
+        metadata_json_column=None,
     )
     test_docs = [
         Document(
@@ -430,8 +439,9 @@ def test_delete_doc_with_default_metadata(engine):
     assert len(loader.load()) == 0
 
 
-@pytest.mark.parametrize("store_metadata", [True, False])
+@pytest.mark.parametrize("metadata_json_column", [None, "metadata_col_test"])
 def test_delete_doc_with_customized_metadata(engine, store_metadata):
+    content_column = "content_col_test"
     engine.init_document_table(
         table_name,
         metadata_columns=[
@@ -448,7 +458,9 @@ def test_delete_doc_with_customized_metadata(engine, store_metadata):
                 nullable=True,
             ),
         ],
-        store_metadata=store_metadata,
+        content_column=content_column,
+        metadata_json_column=metadata_json_column,
+        overwrite_existing=True,
     )
     test_docs = [
         Document(
@@ -460,8 +472,18 @@ def test_delete_doc_with_customized_metadata(engine, store_metadata):
             metadata={"fruit_id": 2, "fruit_name": "Banana", "organic": 1},
         ),
     ]
-    saver = MSSQLDocumentSaver(engine=engine, table_name=table_name)
-    loader = MSSQLLoader(engine=engine, table_name=table_name)
+    saver = MSSQLDocumentSaver(
+        engine=engine,
+        table_name=table_name,
+        content_column=content_column,
+        metadata_json_column=metadata_json_column,
+    )
+    loader = MSSQLLoader(
+        engine=engine,
+        table_name=table_name,
+        content_columns=[content_column],
+        metadata_json_column=metadata_json_column,
+    )
 
     saver.add_documents(test_docs)
     docs = loader.load()
@@ -491,7 +513,6 @@ def test_delete_doc_with_query(engine):
                 nullable=True,
             ),
         ],
-        store_metadata=True,
     )
     test_docs = [
         Document(
