@@ -75,3 +75,4 @@ This is not an officially supported Google product.
 [api]: https://console.cloud.google.com/flows/enableapi?apiid=sqladmin.googleapis.com
 [auth]: https://googleapis.dev/python/google-api-core/latest/auth.html
 [venv]: https://virtualenv.pypa.io/en/latest/
+[loader]: ./docs/document_loader.ipynb
