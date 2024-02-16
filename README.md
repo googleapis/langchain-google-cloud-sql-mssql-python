@@ -33,11 +33,24 @@ source <your-env>/bin/activate
 <your-env>/bin/pip install langchain-google-cloud-sql-mssql
 ```
 
-## Usage
+## Document Loader Usage
+
+
+Use a [document loader](https://python.langchain.com/docs/modules/data_connection/document_loaders/) to load data as LangChain `Document`s.
 
 ```python
-from langchain_google_cloud_sql_mssql import CloudSQLVectorstore, CloudSQLLoader, CloudSQLChatMessageHistory
+from langchain_google_cloud_sql_mssql import MSSQLEngine, MSSQLLoader
+
+
+engine = MSSQLEngine.from_instance("project-id", "region", "my-instance", "my-database", "db_user", "db_pass")
+loader = MSSQLLoader(
+    engine,
+    table_name="my-table-name"
+)
+docs = loader.lazy_load()
 ```
+
+See the full [Document Loader][loader] tutorial.
 
 ## Contributing
 
