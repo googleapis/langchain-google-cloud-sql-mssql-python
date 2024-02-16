@@ -12,14 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .chat_message_history import (
-    MSSQLChatMessageHistory,
-)
+from .chat_message_history import MSSQLChatMessageHistory
 from .engine import MSSQLEngine
-from .loader import (
-    MSSQLDocumentSaver,
-    MSSQLLoader,
-)
+from .loader import MSSQLDocumentSaver, MSSQLLoader
 from .version import __version__
 
 __all__ = [
