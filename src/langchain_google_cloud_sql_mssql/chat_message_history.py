@@ -18,7 +18,7 @@ import sqlalchemy
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_core.messages import BaseMessage, messages_from_dict
 
-from langchain_google_cloud_sql_mssql.mssql_engine import MSSQLEngine
+from .engine import MSSQLEngine
 
 
 class MSSQLChatMessageHistory(BaseChatMessageHistory):
