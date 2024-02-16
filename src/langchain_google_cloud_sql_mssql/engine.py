@@ -20,6 +20,10 @@ from typing import List, Optional
 import sqlalchemy
 from google.cloud.sql.connector import Connector
 
+from .version import __version__
+
+USER_AGENT = "langchain-google-cloud-sql-mssql-python/" + __version__
+
 
 class MSSQLEngine:
     """A class for managing connections to a Cloud SQL for MSSQL database."""
@@ -92,7 +96,7 @@ class MSSQLEngine:
                 Python Connector.
         """
         if cls._connector is None:
-            cls._connector = Connector()
+            cls._connector = Connector(user_agent=USER_AGENT)
 
         # anonymous function to be used for SQLAlchemy 'creator' argument
         def getconn():
