@@ -153,7 +153,9 @@ class MSSQLEngine:
         self,
         table_name: str,
         metadata_columns: List[sqlalchemy.Column] = [],
-        store_metadata: bool = True,
+        content_column: str = "page_content",
+        metadata_json_column: Optional[str] = "langchain_metadata",
+        overwrite_existing: bool = False,
     ) -> None:
         """
         Create a table for saving of langchain documents.
@@ -162,22 +164,29 @@ class MSSQLEngine:
             table_name (str): The MSSQL database table name.
             metadata_columns (List[sqlalchemy.Column]): A list of SQLAlchemy Columns
                 to create for custom metadata. Optional.
-            store_metadata (bool): Whether to store extra metadata in a metadata column
-                if not described in 'metadata' field list (Default: True).
+            content_column (str): The column to store document content.
+                Deafult: `page_content`.
+            metadata_json_column (Optional[str]): The column to store extra metadata in JSON format.
+                Default: `langchain_metadata`. Optional.
+            overwrite_existing (bool): Whether to drop existing table. Default: False.
         """
+        if overwrite_existing:
+            with self.engine.connect() as conn:
+                conn.execute(sqlalchemy.text(f'DROP TABLE IF EXISTS "{table_name}";'))
+
         columns = [
             sqlalchemy.Column(
-                "page_content",
+                content_column,
                 sqlalchemy.UnicodeText,
                 primary_key=False,
                 nullable=False,
             )
         ]
         columns += metadata_columns
-        if store_metadata:
+        if metadata_json_column:
             columns.append(
                 sqlalchemy.Column(
-                    "langchain_metadata",
+                    metadata_json_column,
                     sqlalchemy.JSON,
                     primary_key=False,
                     nullable=True,

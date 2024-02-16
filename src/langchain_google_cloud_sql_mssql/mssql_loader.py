@@ -26,33 +26,41 @@ DEFAULT_METADATA_COL = "langchain_metadata"
 
 
 def _parse_doc_from_row(
-    content_columns: Iterable[str], metadata_columns: Iterable[str], row: Dict
+    content_columns: Iterable[str],
+    metadata_columns: Iterable[str],
+    row: Dict,
+    metadata_json_column: str = DEFAULT_METADATA_COL,
 ) -> Document:
     page_content = " ".join(
         str(row[column]) for column in content_columns if column in row
     )
     metadata: Dict[str, Any] = {}
     # unnest metadata from langchain_metadata column
-    if DEFAULT_METADATA_COL in metadata_columns and row.get(DEFAULT_METADATA_COL):
-        for k, v in row[DEFAULT_METADATA_COL].items():
+    if row.get(metadata_json_column):
+        for k, v in row[metadata_json_column].items():
             metadata[k] = v
     # load metadata from other columns
     for column in metadata_columns:
-        if column in row and column != DEFAULT_METADATA_COL:
+        if column in row and column != metadata_json_column:
             metadata[column] = row[column]
     return Document(page_content=page_content, metadata=metadata)
 
 
-def _parse_row_from_doc(column_names: Iterable[str], doc: Document) -> Dict:
+def _parse_row_from_doc(
+    column_names: Iterable[str],
+    doc: Document,
+    content_column: str = DEFAULT_CONTENT_COL,
+    metadata_json_column: str = DEFAULT_METADATA_COL,
+) -> Dict:
     doc_metadata = doc.metadata.copy()
-    row: Dict[str, Any] = {DEFAULT_CONTENT_COL: doc.page_content}
+    row: Dict[str, Any] = {content_column: doc.page_content}
     for entry in doc.metadata:
         if entry in column_names:
             row[entry] = doc_metadata[entry]
             del doc_metadata[entry]
     # store extra metadata in langchain_metadata column in json format
-    if DEFAULT_METADATA_COL in column_names and len(doc_metadata) > 0:
-        row[DEFAULT_METADATA_COL] = doc_metadata
+    if metadata_json_column in column_names and len(doc_metadata) > 0:
+        row[metadata_json_column] = doc_metadata
     return row
 
 
@@ -66,6 +74,7 @@ class MSSQLLoader(BaseLoader):
         query: str = "",
         content_columns: Optional[List[str]] = None,
         metadata_columns: Optional[List[str]] = None,
+        metadata_json_column: Optional[str] = None,
     ):
         """
         Document page content defaults to the first column present in the query or table and
@@ -77,19 +86,22 @@ class MSSQLLoader(BaseLoader):
         space-separated string concatenation.
 
         Args:
-          engine (MSSQLEngine): MSSQLEngine object to connect to the MSSQL database.
-          table_name (str): The MSSQL database table name. (OneOf: table_name, query).
-          query (str): The query to execute in MSSQL format.  (OneOf: table_name, query).
-          content_columns (List[str]): The columns to write into the `page_content`
-             of the document. Optional.
-          metadata_columns (List[str]): The columns to write into the `metadata` of the document.
-             Optional.
+            engine (MSSQLEngine): MSSQLEngine object to connect to the MSSQL database.
+            table_name (str): The MSSQL database table name. (OneOf: table_name, query).
+            query (str): The query to execute in MSSQL format.  (OneOf: table_name, query).
+            content_columns (List[str]): The columns to write into the `page_content`
+                of the document. Optional.
+            metadata_columns (List[str]): The columns to write into the `metadata` of the document.
+                Optional.
+            metadata_json_column (str): The name of the JSON column to use as the metadata’s base
+                dictionary. Default: `langchain_metadata`. Optional.
         """
         self.engine = engine
         self.table_name = table_name
         self.query = query
         self.content_columns = content_columns
         self.metadata_columns = metadata_columns
+        self.metadata_json_column = metadata_json_column
         if not self.table_name and not self.query:
             raise ValueError("One of 'table_name' or 'query' must be specified.")
         if self.table_name and self.query:
@@ -128,6 +140,25 @@ class MSSQLLoader(BaseLoader):
             metadata_columns = self.metadata_columns or [
                 col for col in column_names if col not in content_columns
             ]
+            # check validity of metadata json column
+            if (
+                self.metadata_json_column
+                and self.metadata_json_column not in column_names
+            ):
+                raise ValueError(
+                    f"Column {self.metadata_json_column} not found in query result {column_names}."
+                )
+            # check validity of other column
+            all_names = content_columns + metadata_columns
+            for name in all_names:
+                if name not in column_names:
+                    raise ValueError(
+                        f"Column {name} not found in query result {column_names}."
+                    )
+            # use default metadata json column if not specified
+            metadata_json_column = self.metadata_json_column or DEFAULT_METADATA_COL
+
+            # load document one by one
             while True:
                 row = result_proxy.fetchone()
                 if not row:
@@ -136,11 +167,13 @@ class MSSQLLoader(BaseLoader):
                 row_data = {}
                 for column in column_names:
                     value = getattr(row, column)
-                    if column == DEFAULT_METADATA_COL:
+                    if column == metadata_json_column:
                         row_data[column] = json.loads(value)
                     else:
                         row_data[column] = value
-                yield _parse_doc_from_row(content_columns, metadata_columns, row_data)
+                yield _parse_doc_from_row(
+                    content_columns, metadata_columns, row_data, metadata_json_column
+                )
 
 
 class MSSQLDocumentSaver:
@@ -150,6 +183,8 @@ class MSSQLDocumentSaver:
         self,
         engine: MSSQLEngine,
         table_name: str,
+        content_column: Optional[str] = None,
+        metadata_json_column: Optional[str] = None,
     ):
         """
         MSSQLDocumentSaver allows for saving of langchain documents in a database. If the table
@@ -160,14 +195,28 @@ class MSSQLDocumentSaver:
         Args:
           engine: MSSQLEngine object to connect to the MSSQL database.
           table_name: The name of table for saving documents.
+          content_column (str): The column to store document content.
+            Deafult: `page_content`. Optional.
+          metadata_json_column (str): The name of the JSON column to use as the metadata’s base
+            dictionary. Default: `langchain_metadata`. Optional.
         """
         self.engine = engine
         self.table_name = table_name
         self._table = self.engine._load_document_table(table_name)
-        if DEFAULT_CONTENT_COL not in self._table.columns.keys():
+        self.content_column = content_column or DEFAULT_CONTENT_COL
+        if self.content_column not in self._table.columns.keys():
             raise ValueError(
-                f"Missing '{DEFAULT_CONTENT_COL}' field in table {table_name}."
+                f"Missing '{self.content_column}' field in table {table_name}."
             )
+        # check metadata_json_column existence if it's provided.
+        if (
+            metadata_json_column
+            and metadata_json_column not in self._table.columns.keys()
+        ):
+            raise ValueError(
+                f"Cannot find '{metadata_json_column}' column in table {table_name}."
+            )
+        self.metadata_json_column = metadata_json_column or DEFAULT_METADATA_COL
 
     def add_documents(self, docs: List[Document]) -> None:
         """
@@ -179,9 +228,16 @@ class MSSQLDocumentSaver:
         """
         with self.engine.connect() as conn:
             for doc in docs:
-                row = _parse_row_from_doc(self._table.columns.keys(), doc)
-                if DEFAULT_METADATA_COL in row:
-                    row[DEFAULT_METADATA_COL] = json.dumps(row[DEFAULT_METADATA_COL])
+                row = _parse_row_from_doc(
+                    self._table.columns.keys(),
+                    doc,
+                    self.content_column,
+                    self.metadata_json_column,
+                )
+                if self.metadata_json_column in row:
+                    row[self.metadata_json_column] = json.dumps(
+                        row[self.metadata_json_column]
+                    )
                 conn.execute(sqlalchemy.insert(self._table).values(row))
             conn.commit()
 
@@ -195,9 +251,16 @@ class MSSQLDocumentSaver:
         """
         with self.engine.connect() as conn:
             for doc in docs:
-                row = _parse_row_from_doc(self._table.columns.keys(), doc)
-                if DEFAULT_METADATA_COL in row:
-                    row[DEFAULT_METADATA_COL] = json.dumps(row[DEFAULT_METADATA_COL])
+                row = _parse_row_from_doc(
+                    self._table.columns.keys(),
+                    doc,
+                    self.content_column,
+                    self.metadata_json_column,
+                )
+                if self.metadata_json_column in row:
+                    row[self.metadata_json_column] = json.dumps(
+                        row[self.metadata_json_column]
+                    )
                 # delete by matching all fields of document
                 where_conditions = []
                 for col in self._table.columns:
