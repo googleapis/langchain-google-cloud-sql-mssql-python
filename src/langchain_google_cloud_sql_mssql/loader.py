@@ -19,7 +19,7 @@ import sqlalchemy
 from langchain_community.document_loaders.base import BaseLoader
 from langchain_core.documents import Document
 
-from langchain_google_cloud_sql_mssql.mssql_engine import MSSQLEngine
+from .engine import MSSQLEngine
 
 DEFAULT_CONTENT_COL = "page_content"
 DEFAULT_METADATA_COL = "langchain_metadata"

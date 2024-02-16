@@ -1,6 +1,6 @@
 [project]
 name = "langchain-google-cloud-sql-mssql"
-version = "0.0.1"
+dynamic = ["version"]
 description = "LangChain integrations for Google Cloud SQL for SQL Server"
 readme = "README.md"
 license = {file = "LICENSE"}
@@ -11,6 +11,9 @@ dependencies = [
     "sqlalchemy-pytds==0.3.5",
     "cloud-sql-python-connector[pytds]==1.5.0"
 ]
+
+[tool.setuptools.dynamic]
+version = {attr = "langchain_google_cloud_sql_mssql.version.__version__"}
 
 [project.urls]
 Homepage = "https://github.com/googleapis/langchain-google-cloud-sql-mssql-python"
