@@ -1,6 +1,6 @@
 # Cloud SQL for SQL Server for LangChain
 
-*Description*
+This package contains the [LangChain][langchain] integrations for Cloud SQL for SQL Server.
 
 > **🧪 Preview:** This feature is covered by the Pre-GA Offerings Terms of the Google Cloud Terms of Service. Please note that pre-GA products and features might have limited support, and changes to pre-GA products and features might not be compatible with other pre-GA versions. For more information, see the [launch stage descriptions](https://cloud.google.com/products#product-launch-stages)
 
@@ -54,7 +54,7 @@ See the full [Document Loader][loader] tutorial.
 
 ## Chat Message History Usage
 
-Use [ChatMessageHistory](https://python.langchain.com/docs/modules/memory/chat_messages/) to store messages and provide conversation history to LLMs.
+Use [`ChatMessageHistory`](https://python.langchain.com/docs/modules/memory/chat_messages/) to store messages and provide conversation history to LLMs.
 
 ```python
 from langchain_google_cloud_sql_mssql import MSSQLChatMessageHistory, MSSQLEngine
@@ -95,3 +95,4 @@ This is not an officially supported Google product.
 [venv]: https://virtualenv.pypa.io/en/latest/
 [loader]: ./docs/document_loader.ipynb
 [history]: ./docs/chat_message_history.ipynb
+[langchain]: https://github.com/langchain-ai/langchain
