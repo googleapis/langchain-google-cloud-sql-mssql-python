@@ -27,7 +27,7 @@ branchProtectionRules:
     requiredStatusCheckContexts:
       - "cla/google"
       - "lint"
-      - "integration-test-pr (langchain-cloud-sql-mssql-testing)"
+      - "mssql-integration-test-pr (langchain-cloud-sql-testing)"
       - "conventionalcommits.org"
       - "header-check"
     # - Add required status checks like presubmit tests
