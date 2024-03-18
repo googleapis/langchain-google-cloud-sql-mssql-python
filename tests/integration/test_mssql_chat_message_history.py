@@ -28,8 +28,8 @@ instance_id = os.environ["INSTANCE_ID"]
 db_name = os.environ["DB_NAME"]
 db_user = os.environ["DB_USER"]
 db_password = os.environ["DB_PASSWORD"]
-table_name = "message_store" + str(uuid.uuid4())
-malformed_table = "malformed_table" + str(uuid.uuid4())
+table_name = "message_store" + str(uuid.uuid4()).replace("-", "_")
+malformed_table = "malformed_table" + str(uuid.uuid4()).replace("-", "_")
 
 
 @pytest.fixture(name="memory_engine")
@@ -44,7 +44,7 @@ def setup() -> Generator:
     )
 
     # create table with malformed schema (missing 'type')
-    query = f"""CREATE TABLE `{malformed_table}` (
+    query = f"""CREATE TABLE {malformed_table} (
         id INT IDENTITY(1,1) PRIMARY KEY,
         session_id NVARCHAR(MAX) NOT NULL,
         data NVARCHAR(MAX) NOT NULL,
@@ -55,8 +55,8 @@ def setup() -> Generator:
     yield engine
     # cleanup tables
     with engine.connect() as conn:
-        conn.execute(sqlalchemy.text(f"DROP TABLE IF EXISTS `{table_name}`"))
-        conn.execute(sqlalchemy.text(f"DROP TABLE IF EXISTS `{malformed_table}`"))
+        conn.execute(sqlalchemy.text(f"DROP TABLE IF EXISTS {table_name}"))
+        conn.execute(sqlalchemy.text(f"DROP TABLE IF EXISTS {malformed_table}"))
         conn.commit()
 
 
