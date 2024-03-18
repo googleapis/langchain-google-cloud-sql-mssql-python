@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import json
-from collections.abc import Iterable
-from typing import Any, Dict, Iterator, List, Optional, Sequence, cast
+from typing import Any, Dict, Iterable, Iterator, List, Optional
 
 import sqlalchemy
 from langchain_community.document_loaders.base import BaseLoader
@@ -172,7 +171,10 @@ class MSSQLLoader(BaseLoader):
                     else:
                         row_data[column] = value
                 yield _parse_doc_from_row(
-                    content_columns, metadata_columns, row_data, metadata_json_column
+                    content_columns,
+                    metadata_columns,
+                    row_data,
+                    metadata_json_column,
                 )
 
 
