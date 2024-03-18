@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
+import uuid
 from typing import Generator
 
 import pytest
@@ -27,7 +28,8 @@ instance_id = os.environ["INSTANCE_ID"]
 db_name = os.environ["DB_NAME"]
 db_user = os.environ["DB_USER"]
 db_password = os.environ["DB_PASSWORD"]
-table_name = "message_store"
+table_name = "message_store" + str(uuid.uuid4())
+malformed_table = "malformed_table" + str(uuid.uuid4())
 
 
 @pytest.fixture(name="memory_engine")
@@ -42,7 +44,7 @@ def setup() -> Generator:
     )
 
     # create table with malformed schema (missing 'type')
-    query = """CREATE TABLE malformed_table (
+    query = """CREATE TABLE `{malformed_table}` (
         id INT IDENTITY(1,1) PRIMARY KEY,
         session_id NVARCHAR(MAX) NOT NULL,
         data NVARCHAR(MAX) NOT NULL,
@@ -53,8 +55,8 @@ def setup() -> Generator:
     yield engine
     # cleanup tables
     with engine.connect() as conn:
-        conn.execute(sqlalchemy.text(f"DROP TABLE IF EXISTS {table_name}"))
-        conn.execute(sqlalchemy.text(f"DROP TABLE IF EXISTS malformed_table"))
+        conn.execute(sqlalchemy.text(f"DROP TABLE IF EXISTS `{table_name}`"))
+        conn.execute(sqlalchemy.text(f"DROP TABLE IF EXISTS `{malformed_table}`"))
         conn.commit()
 
 
@@ -78,7 +80,9 @@ def test_chat_message_history(memory_engine: MSSQLEngine) -> None:
     assert len(history.messages) == 0
 
 
-def test_chat_message_history_table_does_not_exist(memory_engine: MSSQLEngine) -> None:
+def test_chat_message_history_table_does_not_exist(
+    memory_engine: MSSQLEngine,
+) -> None:
     """Test that MSSQLChatMessageHistory fails if table does not exist."""
     with pytest.raises(AttributeError) as exc_info:
         MSSQLChatMessageHistory(
@@ -97,5 +101,7 @@ def test_chat_message_history_table_malformed_schema(
     """Test that MSSQLChatMessageHistory fails if schema is malformed."""
     with pytest.raises(IndexError):
         MSSQLChatMessageHistory(
-            engine=memory_engine, session_id="test", table_name="malformed_table"
+            engine=memory_engine,
+            session_id="test",
+            table_name=malformed_table,
         )
