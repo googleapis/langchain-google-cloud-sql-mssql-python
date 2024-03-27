@@ -1,4 +1,4 @@
-langchain-core==0.1.32
+langchain-core==0.1.35
 langchain-community==0.0.28
 SQLAlchemy==2.0.28
 sqlalchemy-pytds==1.0.0
