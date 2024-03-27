@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.0](https://github.com/googleapis/langchain-google-cloud-sql-mssql-python/compare/v0.1.0...v0.2.0) (2024-03-27)
+
+
+### Features
+
+* **ci:** Test against multiple versions ([#36](https://github.com/googleapis/langchain-google-cloud-sql-mssql-python/issues/36)) ([e07bb82](https://github.com/googleapis/langchain-google-cloud-sql-mssql-python/commit/e07bb826cd8106b8865b8fb332695ec822649b7a))
+
+
+### Documentation
+
+* Add github links ([#29](https://github.com/googleapis/langchain-google-cloud-sql-mssql-python/issues/29)) ([9b374e3](https://github.com/googleapis/langchain-google-cloud-sql-mssql-python/commit/9b374e3963b25f26121b32dd83652f4d830f1437))
+
 ## 0.1.0 (2024-02-26)
 
 
