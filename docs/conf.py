@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# langchain-google-cloud-sql-mysql documentation build configuration file
+# langchain-google-cloud-sql-mssql documentation build configuration file
 #
 # This file is execfile()d with the current directory set to its
 # containing dir.
