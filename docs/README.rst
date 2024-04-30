@@ -1,1 +1,1 @@
-/Users/duwenxin/langchain-google-cloud-sql-mssql-python/README.rst
+../README.rst
