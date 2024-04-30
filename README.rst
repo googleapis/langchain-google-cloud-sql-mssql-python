@@ -13,7 +13,7 @@ Cloud SQL for SQL Server for LangChain
 .. |versions| image:: https://img.shields.io/pypi/pyversions/langchain-google-cloud-sql-mssql.svg
    :target: https://pypi.org/project/langchain-google-cloud-sql-mssql/
 .. _Client Library Documentation: https://cloud.google.com/python/docs/reference/langchain-google-cloud-sql-mssql/latest
-.. _Product Documentation: https://cloud.google.com/sql/mysql
+.. _Product Documentation: https://cloud.google.com/sql/sqlserver
 
 Quick Start
 -----------
