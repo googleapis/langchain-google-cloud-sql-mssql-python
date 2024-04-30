@@ -191,8 +191,8 @@ class MSSQLDocumentSaver:
         """
         MSSQLDocumentSaver allows for saving of langchain documents in a database. If the table
         doesn't exists, a table with default schema will be created. The default schema:
-            - page_content (type: text)
-            - langchain_metadata (type: JSON)
+        - page_content (type: text)
+        - langchain_metadata (type: JSON)
 
         Args:
           engine: MSSQLEngine object to connect to the MSSQL database.
