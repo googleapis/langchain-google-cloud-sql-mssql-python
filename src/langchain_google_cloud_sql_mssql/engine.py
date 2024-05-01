@@ -128,6 +128,8 @@ class MSSQLEngine:
 
         Required schema is as follows:
 
+        ::
+
             CREATE TABLE {table_name} (
                 id INT IDENTITY(1,1) PRIMARY KEY,
                 session_id NVARCHAR(MAX) NOT NULL,

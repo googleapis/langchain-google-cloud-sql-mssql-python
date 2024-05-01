@@ -1,0 +1,8 @@
+
+Chat Message History
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: langchain_google_cloud_sql_mssql.chat_message_history
+  :members:
+  :private-members:
+  :noindex:
