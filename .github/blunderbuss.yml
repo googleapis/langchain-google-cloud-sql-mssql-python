@@ -1,0 +1,4 @@
+assign_issues:
+  - googleapis/langchain-csql-mssql
+assign_prs:
+  - googleapis/langchain-csql-mssql
