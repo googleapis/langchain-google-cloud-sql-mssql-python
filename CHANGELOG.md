@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/googleapis/langchain-google-cloud-sql-mssql-python/compare/v0.2.0...v0.2.1) (2024-06-26)
+
+
+### Bug Fixes
+
+* Use lazy refresh for Cloud SQL Connector ([#55](https://github.com/googleapis/langchain-google-cloud-sql-mssql-python/issues/55)) ([0c29445](https://github.com/googleapis/langchain-google-cloud-sql-mssql-python/commit/0c29445be6680cd45b4c796a1f3254552131f15c))
+
 ## [0.2.0](https://github.com/googleapis/langchain-google-cloud-sql-mssql-python/compare/v0.1.0...v0.2.0) (2024-05-01)
 
 
