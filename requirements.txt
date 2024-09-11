@@ -1,5 +1,5 @@
-langchain-core==0.2.25
-langchain-community==0.2.9
-SQLAlchemy==2.0.31
-sqlalchemy-pytds==1.0.0
-cloud-sql-python-connector[pytds]==1.11.0
+langchain-core==0.2.39
+langchain-community==0.2.16
+SQLAlchemy==2.0.34
+sqlalchemy-pytds==1.0.1
+cloud-sql-python-connector[pytds]==1.12.0
