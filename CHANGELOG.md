@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.0](https://github.com/googleapis/langchain-google-cloud-sql-mssql-python/compare/v0.2.1...v0.3.0) (2025-02-12)
+
+
+### Features
+
+* Remove support for Python 3.8 ([#71](https://github.com/googleapis/langchain-google-cloud-sql-mssql-python/issues/71)) ([457adf5](https://github.com/googleapis/langchain-google-cloud-sql-mssql-python/commit/457adf56c8d25879e2fde21640f708c648e0c35a))
+
+
+### Documentation
+
+* Update README.rst title size ([#64](https://github.com/googleapis/langchain-google-cloud-sql-mssql-python/issues/64)) ([e0dd934](https://github.com/googleapis/langchain-google-cloud-sql-mssql-python/commit/e0dd9340984967522139baf514a1d1c22702ec41))
+
 ## [0.2.1](https://github.com/googleapis/langchain-google-cloud-sql-mssql-python/compare/v0.2.0...v0.2.1) (2024-06-26)
 
 
