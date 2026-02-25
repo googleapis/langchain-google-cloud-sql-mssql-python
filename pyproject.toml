@@ -37,12 +37,12 @@ Changelog = "https://github.com/googleapis/langchain-google-cloud-sql-mssql-pyth
 
 [project.optional-dependencies]
 test = [
-    "black[jupyter]==24.8.0",
+    "black[jupyter]==24.10.0",
     "isort==5.13.2",
-    "langchain==0.3.1",
-    "mypy==1.11.2",
-    "pytest-asyncio==0.24.0",
-    "pytest==8.3.3",
+    "langchain==0.3.27",
+    "mypy==1.17.1",
+    "pytest-asyncio==0.26.0",
+    "pytest==8.4.1",
     "pytest-cov==5.0.0"
 ]
 
